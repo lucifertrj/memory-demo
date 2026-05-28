@@ -1,23 +1,17 @@
-import os,pathlib
 import asyncio
+import os
+import pathlib
+from os import path
 
 import cognee
-from cognee_community_vector_adapter_qdrant import register 
+from cognee import config
+# NOTE: Importing the register module we let cognee know it can use the Qdrant vector adapter
+# NOTE: The "noqa: F401" mark is to make sure the linter doesn't flag this as an unused import
+from cognee_community_vector_adapter_qdrant import register  # noqa: F401
 
 from dotenv import load_dotenv
 load_dotenv()
 
-system_path = pathlib.Path(__file__).parent
-cognee.config.system_root_directory(os.path.join(system_path, ".cognee_system"))
-cognee.config.data_root_directory(os.path.join(system_path, ".data_storage"))
-
-cognee.config.set_relational_db_config({"db_provider": "sqlite"})
-cognee.config.set_vector_db_config({
-    "vector_db_provider": "qdrant",
-    "vector_db_url": os.getenv("QDRANT_URL"),
-    "vector_db_key": os.getenv("QDRANT_API_KEY"),
-    "vector_dataset_database_handler":"qdrant"
-})
 MY_PREFERENCE = """
 - I like to visit places near the beach where I can find the best spots. 
 - I need locations that are rare to find on blogs but are goldmine places for your eyes
@@ -26,18 +20,30 @@ MY_PREFERENCE = """
 """
 
 async def main():
-    await cognee.prune.prune_data()
-    await cognee.prune.prune_system(metadata=True)
+    system_path = pathlib.Path(__file__).parent
+    config.system_root_directory(path.join(system_path, ".cognee_system"))
+    config.data_root_directory(path.join(system_path, ".data_storage"))
 
-    await cognee.add(MY_PREFERENCE,node_set="personal_tarun")
-    await cognee.add("- In Food I usually prefer Thali and Indian Vegetarian food places",node_set=["food"])
-    await cognee.cognify()
-    await cognee.memify()
+    config.set_relational_db_config({"db_provider": "sqlite"})
+    config.set_vector_db_config(
+        {
+            "vector_db_provider": "qdrant",
+            "vector_db_url": os.getenv("QDRANT_API_URL", "http://localhost:6333"),
+            "vector_db_key": os.getenv("QDRANT_API_KEY", ""),
+            "vector_dataset_database_handler":"qdrant"
+        }
+    )
+    config.set_graph_db_config({
+        "graph_database_provider": "kuzu",
+        "graph_dataset_database_handler": "kuzu",
+    })
+    await cognee.remember(MY_PREFERENCE)
 
-    results = await cognee.search("plan 3 days Itinerary for Rome based on my preference")
+    query_text = "plan a 3 days Itinerary for Berlin along with restaurants to try food."
+    search_results = await cognee.recall(query_text=query_text)
 
-    for result in results:
-        print(result)
+    for result_text in search_results:
+        print(result_text)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     asyncio.run(main())
