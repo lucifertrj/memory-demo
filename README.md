@@ -43,7 +43,8 @@ pip install cognee python-dotenv streamlit
 Install the extra packages:
 
 ```bash
-pip install cognee cognee_community_vector_adapter_qdrant fastembed google-genai python-dotenv
+pip install fastembed google-genai python-dotenv
+pip install git+https://github.com/topoteretes/cognee-community.git#subdirectory=packages/vector/qdrant
 ```
 
 Create a `.env` file from the custom app example:
