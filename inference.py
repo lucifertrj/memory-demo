@@ -1,8 +1,10 @@
 import os
 import cognee
 import asyncio
+
 from dotenv import load_dotenv
-load_dotenv() # or os.environ["LLM_API_KEY"] = "YOUR OPENAI_API_KEY"
+load_dotenv() 
+
 from cognee.api.v1.visualize.visualize import visualize_graph
 
 MY_PREFERENCE = """
